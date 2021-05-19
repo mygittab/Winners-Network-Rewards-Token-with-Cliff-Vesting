@@ -483,7 +483,7 @@ abstract contract Ownable is Context {
 }
 
 
-// Root file: contracts/WinsToken.sol
+// Root file: contracts/WINS.sol
 
 
 pragma solidity 0.8.0;
@@ -491,7 +491,7 @@ pragma solidity 0.8.0;
 // import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 // import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract WinsToken is ERC20, Ownable {
+contract WINS is ERC20, Ownable {
     event Mint(address indexed to, uint256 amount);
     event MintFinished();
 
