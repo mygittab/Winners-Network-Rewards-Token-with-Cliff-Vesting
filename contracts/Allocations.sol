@@ -58,15 +58,15 @@ contract Allocations is Ownable, Pausable, ReentrancyGuard {
     uint256 public threshold = 100000; //
 
     //MONTHS
-    uint256 public liquidityVestingPeriod = 10; //10% for 10 months
-    uint256 public teamVestingPeriod = 17; //5% for 17 months (rest 85%), 15% initially
-    uint256 public presaleVestingPeriod = 0; //none
-    uint256 public marketingVestingPeriod = 17; //5% for 17 months (rest 85%), 15% initially
-    uint256 public reserveVestingPeriod = 12; //8.33% each month for 12 months(100%)
-    uint256 public technologyVestingPeriod = 3; //25% for 3 months (75%), 25% initially
-    uint256 public legalVestingPeriod = 3; //25% for 3 months (75%), 25% initially
-    uint256 public advisorVestingPeriod = 3; //25% for 3 months (75%), 25% initially
-    uint256 public idoVestingPeriod = 0; //none
+    uint256 public constant LIQUIDITY_VESTING_PERIOD = 10; //10% for 10 months
+    uint256 public constant TEAM_VESTING_PERIOD = 17; //5% for 17 months (rest 85%), 15% initially
+    uint256 public constant MARKETING_VESTING_PERIOD = 0; //none
+    uint256 public constant PRESALE_VESTING_PERIOD = 17; //5% for 17 months (rest 85%), 15% initially
+    uint256 public constant RESERVE_VESTING_PERIOD = 12; //8.33% each month for 12 months(100%)
+    uint256 public constant TECHNOLOGY_VESTING_PERIOD = 3; //25% for 3 months (75%), 25% initially
+    uint256 public constant LEGAL_VESTING_PERIOD = 3; //25% for 3 months (75%), 25% initially
+    uint256 public constant ADVISOR_VESTING_PERIOD = 3; //25% for 3 months (75%), 25% initially
+    uint256 public constant IDO_VESTING_PERIOD = 0; //none
 
     //WALLETS
     address public liquidity;
@@ -93,6 +93,17 @@ contract Allocations is Ownable, Pausable, ReentrancyGuard {
     //PUBLIC VARS
     IERC20 public token;
     uint256 startTime;
+
+    //RELEASE
+    uint256 public liquidityReleaseAmount;
+    uint256 public teamReleaseAmount;
+    uint256 public marketingReleaseAmount;
+    uint256 public presaleReleaseAmount;
+    uint256 public reserveReleaseAmount;
+    uint256 public technologyReleaseAmount;
+    uint256 public legalReleaseAmount;
+    uint256 public advisorReleaseAmount;
+    uint256 public idoReleaseAmount;
 
     constructor(uint256 _startTime, IERC20 _token) {
         require(address(_token) != address(0), "invalid token address");
@@ -177,81 +188,111 @@ contract Allocations is Ownable, Pausable, ReentrancyGuard {
     **/
 
     function grantToLiquidityWallet() external {
-        liquidityCounter = _grantTokens(
+        (liquidityCounter, liquidityReleaseAmount) = _grantTokens(
             liquidity,
             LIQUIDITY_SUPPLY,
             LIQUIDITY_INITIAL_UNLOCK,
             liquidityTimelock,
-            liquidityVestingPeriod,
-            liquidityCounter
+            LIQUIDITY_VESTING_PERIOD,
+            liquidityCounter,
+            liquidityReleaseAmount
         );
     }
 
     function grantToTeamWallet() external {
-        teamCounter = _grantTokens(team, TEAM_SUPPLY, TEAM_INITIAL_UNLOCK, teamTimelock, teamVestingPeriod, teamCounter);
+        (teamCounter, teamReleaseAmount) = _grantTokens(
+            team,
+            TEAM_SUPPLY,
+            TEAM_INITIAL_UNLOCK,
+            teamTimelock,
+            TEAM_VESTING_PERIOD,
+            teamCounter,
+            teamReleaseAmount
+        );
     }
 
     function grantToMarketingWallet() external {
-        teamCounter = _grantTokens(
+        (marketingCounter, marketingReleaseAmount) = _grantTokens(
             marketing,
             MARKETING_SUPPLY,
             MARKETING_INITIAL_UNLOCK,
             marketingTimelock,
-            marketingVestingPeriod,
-            marketingCounter
+            MARKETING_VESTING_PERIOD,
+            marketingCounter,
+            marketingReleaseAmount
         );
     }
 
     function grantToPresaleWallet() external {
-        presaleCounter = _grantTokens(
+        (presaleCounter, presaleReleaseAmount) = _grantTokens(
             presale,
             PRESALE_SUPPLY,
             PRESALE_INITIAL_UNLOCK,
             presaleTimelock,
-            presaleVestingPeriod,
-            presaleCounter
+            PRESALE_VESTING_PERIOD,
+            presaleCounter,
+            presaleReleaseAmount
         );
     }
 
     function grantToReserveWallet() external {
-        reserveCounter = _grantTokens(
+        (reserveCounter, reserveReleaseAmount) = _grantTokens(
             reserve,
             RESERVE_SUPPLY,
             RESERVE_INITIAL_UNLOCK,
             reserveTimelock,
-            reserveVestingPeriod,
-            reserveCounter
+            RESERVE_VESTING_PERIOD,
+            reserveCounter,
+            reserveReleaseAmount
         );
     }
 
     function grantToTechnologyWallet() external {
-        technologyCounter = _grantTokens(
+        (technologyCounter, technologyReleaseAmount) = _grantTokens(
             technology,
             TECHNOLOGY_SUPPLY,
             TECHNOLOGY_INITIAL_UNLOCK,
             technologyTimelock,
-            technologyVestingPeriod,
-            technologyCounter
+            TECHNOLOGY_VESTING_PERIOD,
+            technologyCounter,
+            technologyReleaseAmount
         );
     }
 
     function grantToLegalWallet() external {
-        legalCounter = _grantTokens(legal, LEGAL_SUPPLY, LEGAL_INITIAL_UNLOCK, legalTimelock, legalVestingPeriod, legalCounter);
+        (legalCounter, legalReleaseAmount) = _grantTokens(
+            legal,
+            LEGAL_SUPPLY,
+            LEGAL_INITIAL_UNLOCK,
+            legalTimelock,
+            LEGAL_VESTING_PERIOD,
+            legalCounter,
+            legalReleaseAmount
+        );
     }
 
     function grantToAdvisorWallet() external {
-        advisorCounter = _grantTokens(
+        (advisorCounter, advisorReleaseAmount) = _grantTokens(
             advisor,
             ADVISOR_SUPPLY,
             ADVISOR_INITIAL_UNLOCK,
             advisorTimelock,
-            advisorVestingPeriod,
-            advisorCounter
+            ADVISOR_VESTING_PERIOD,
+            advisorCounter,
+            advisorReleaseAmount
         );
     }
 
     function grantToIdoWallet() external {
-        idoCounter = _grantTokens(ido, IDO_SUPPLY, IDO_INITIAL_UNLOCK,  idoTimelock, idoVestingPeriod, idoCounter);
+        (idoCounter, idoReleaseAmount) = _grantTokens(
+            ido,
+            IDO_SUPPLY,
+            IDO_INITIAL_UNLOCK,
+            idoTimelock,
+            IDO_VESTING_PERIOD,
+            idoCounter,
+            idoReleaseAmount
+        );
     }
 
     /**
@@ -263,26 +304,35 @@ contract Allocations is Ownable, Pausable, ReentrancyGuard {
         uint256 _initialUnlock,
         uint256 _timelock,
         uint256 _period,
-        uint256 _counter
-    ) internal nonReentrant returns (uint256 _newCounter) {
+        uint256 _counter,
+        uint256 _releaseAmount
+    ) internal nonReentrant returns (uint256 _newCounter, uint256 _newReleaseAmount) {
         uint256 _amountToClaim = 0;
-        if (_initialUnlock != 0) {
-            _amountToClaim = (_supply * _initialUnlock) / 1 ether; //initial percent
+
+        _newCounter = _counter;
+        _newReleaseAmount = _releaseAmount;
+
+        if (_initialUnlock != 0 && _counter == 0 && _releaseAmount == 0) {
+            _amountToClaim = (_supply * _initialUnlock) / 1 ether;
         }
 
         if (_period != 0) {
             //checking cliff, monthes
-            if ((_counter < _period) && (_timelock < block.timestamp)) {
-                uint256 monthsFromStart = (block.timestamp - startTime) / 30 days; //months from start
-                uint256 unlockAmount = (_supply / _period) * monthsFromStart; //current unlock amounts
+            if ((_counter < _period) && (_timelock <= block.timestamp)) {
+                uint256 monthsFromStart = (block.timestamp - _timelock) / 30 days; //months from start
 
-                _newCounter = _counter + monthsFromStart;
+                monthsFromStart = (monthsFromStart > _period) ? _period : monthsFromStart;
 
-                _amountToClaim = _amountToClaim + unlockAmount;
+                uint256 unlockAmount = ((_supply - (_supply * _initialUnlock) / 1 ether) / _period) * (monthsFromStart - _counter); //current unlock amounts
+
+                _newCounter = monthsFromStart;
+
+                _amountToClaim = (_amountToClaim + unlockAmount);
             }
         }
 
         if ((_amountToClaim > 0) && ((token.balanceOf(address(this)) - threshold) >= _amountToClaim)) {
+            _newReleaseAmount = _releaseAmount + _amountToClaim;
             token.safeTransfer(_wallet, _amountToClaim);
         }
     }

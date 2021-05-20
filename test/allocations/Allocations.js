@@ -704,4 +704,813 @@ contract("Allocations", function (accounts) {
       expect(await this.token.balanceOf(ido)).to.be.bignumber.equal(percent);
     });
   });
+
+  describe("Vesting Period", function () {
+    const [
+      owner,
+      wallet,
+      liquidity,
+      team,
+      marketing,
+      presale,
+      reserve,
+      technology,
+      legal,
+      advisor,
+      ido,
+    ] = accounts;
+
+    const from = owner;
+    const name = "Winners Network Rewards Token";
+    const symbol = "WINS";
+    const initialSupply = ether("180000000");
+
+    const allocationsSupply = ether("160775000");
+
+    beforeEach(async function () {
+      this.token = await WinsToken.new(name, symbol, initialSupply, {
+        from: from,
+      });
+
+      this.startTime = (await time.latest()).add(time.duration.weeks(1));
+
+      this.allocations = await Allocations.new(
+        this.startTime,
+        this.token.address,
+        {
+          from: from,
+        }
+      );
+
+      await this.token.transfer(this.allocations.address, allocationsSupply, {
+        from: from,
+      });
+    });
+
+    it("should has a 10 months liquidity vesting period with cliff 1 month without initial unlock", async function () {
+      await this.allocations.updateLiquidityWallet(liquidity, { from: from });
+
+      expect(await this.token.balanceOf(liquidity)).to.be.bignumber.equal(
+        ether("0")
+      );
+
+      const supply = await this.allocations.LIQUIDITY_SUPPLY();
+      const period = await this.allocations.LIQUIDITY_VESTING_PERIOD();
+
+      expect(period).to.be.bignumber.equal(new BN(10));
+
+      const unlock = supply.div(period);
+
+      const initialUnlock = supply
+        .mul(await this.allocations.LIQUIDITY_INITIAL_UNLOCK())
+        .div(ether("1"));
+
+      //try unlock less month
+      await time.increaseTo(this.startTime.add(time.duration.days("10")));
+
+      await this.allocations.grantToLiquidityWallet({ from: from });
+
+      expect(await this.token.balanceOf(liquidity)).to.be.bignumber.equal(
+        ether("0")
+      );
+
+      //try unlock 1 month
+
+      await time.increaseTo(this.startTime.add(time.duration.days("30")));
+
+      await this.allocations.grantToLiquidityWallet({ from: from });
+
+      expect(await this.token.balanceOf(liquidity)).to.be.bignumber.equal(
+        ether("0")
+      );
+
+      await time.increaseTo(this.startTime.add(time.duration.days("40")));
+
+      //try unlock after some days
+      expect(await this.token.balanceOf(liquidity)).to.be.bignumber.equal(
+        ether("0")
+      );
+
+      //try unlock after 2 month (1 month with 1 month cliff)
+      await time.increaseTo(this.startTime.add(time.duration.days("60")));
+
+      await this.allocations.grantToLiquidityWallet({ from: from });
+
+      expect(await this.token.balanceOf(liquidity)).to.be.bignumber.equal(
+        initialUnlock.add(unlock.mul(new BN(1)))
+      );
+
+      //try unlock after 10 month - 1 month cliff
+      await time.increaseTo(this.startTime.add(time.duration.days("330")));
+
+      await this.allocations.grantToLiquidityWallet({ from: from });
+
+      expect(await this.token.balanceOf(liquidity)).to.be.bignumber.equal(
+        initialUnlock.add(unlock.mul(new BN(10)))
+      );
+
+      //try unlock after 14 month - all supply
+      await time.increaseTo(this.startTime.add(time.duration.days("360")));
+
+      await this.allocations.grantToLiquidityWallet({ from: from });
+
+      expect(await this.token.balanceOf(liquidity)).to.be.bignumber.equal(
+        supply
+      );
+    });
+
+    it("should has a all supply after ends of liquidity vesting period", async function () {
+      await this.allocations.updateLiquidityWallet(liquidity, { from: from });
+      expect(await this.token.balanceOf(liquidity)).to.be.bignumber.equal(
+        ether("0")
+      );
+
+      const supply = await this.allocations.LIQUIDITY_SUPPLY();
+
+      await time.increaseTo(this.startTime.add(time.duration.days("720")));
+
+      await this.allocations.grantToLiquidityWallet({ from: from });
+
+      expect(await this.token.balanceOf(liquidity)).to.be.bignumber.equal(
+        supply
+      );
+    });
+
+    it("should has a 17 months team vesting period without cliff  with initial unlock", async function () {
+      await this.allocations.updateTeamWallet(team, { from: from });
+
+      expect(await this.token.balanceOf(team)).to.be.bignumber.equal(
+        ether("0")
+      );
+
+      const supply = await this.allocations.TEAM_SUPPLY();
+      const period = await this.allocations.TEAM_VESTING_PERIOD();
+
+      expect(period).to.be.bignumber.equal(new BN(17));
+
+      const initialUnlock = supply
+        .mul(await this.allocations.TEAM_INITIAL_UNLOCK())
+        .div(ether("1"));
+
+      const unlock = supply.sub(initialUnlock).div(period);
+
+      await time.increaseTo(this.startTime.add(time.duration.days("10")));
+
+      await this.allocations.grantToTeamWallet({ from: from });
+
+      //try unlock 1 month
+      expect(await this.token.balanceOf(team)).to.be.bignumber.equal(
+        initialUnlock
+      );
+
+      await time.increaseTo(this.startTime.add(time.duration.days("40")));
+
+      await this.allocations.grantToTeamWallet({ from: from });
+
+      expect(await this.token.balanceOf(team)).to.be.bignumber.equal(
+        initialUnlock.add(unlock)
+      );
+
+      //try unlock after 2 month
+      await time.increaseTo(this.startTime.add(time.duration.days("60")));
+
+      await this.allocations.grantToTeamWallet({ from: from });
+
+      expect(await this.token.balanceOf(team)).to.be.bignumber.equal(
+        initialUnlock.add(unlock.mul(new BN(2)))
+      );
+
+      //try unlock after 17 month - all supply
+      await time.increaseTo(this.startTime.add(time.duration.days("510")));
+
+      await this.allocations.grantToTeamWallet({ from: from });
+
+      expect(await this.token.balanceOf(team)).to.be.bignumber.equal(
+        initialUnlock.add(unlock.mul(new BN(17)))
+      );
+
+      //try unlock after 20 month - all supply, no changes
+      await time.increaseTo(this.startTime.add(time.duration.days("600")));
+
+      await this.allocations.grantToTeamWallet({ from: from });
+
+      expect(await this.token.balanceOf(team)).to.be.bignumber.equal(
+        initialUnlock.add(unlock.mul(new BN(17)))
+      );
+
+      expect(initialUnlock.add(unlock.mul(new BN(17)))).to.be.bignumber.equal(
+        supply
+      );
+    });
+
+    it("should has a all supply after ends of team vesting period", async function () {
+      await this.allocations.updateTeamWallet(team, { from: from });
+      expect(await this.token.balanceOf(team)).to.be.bignumber.equal(
+        ether("0")
+      );
+
+      const supply = await this.allocations.TEAM_SUPPLY();
+
+      await time.increaseTo(this.startTime.add(time.duration.days("720")));
+
+      await this.allocations.grantToTeamWallet({ from: from });
+
+      expect(await this.token.balanceOf(team)).to.be.bignumber.equal(supply);
+    });
+
+    it("should has a 0 months marketing vesting period without cliff  with initial unlock", async function () {
+      await this.allocations.updateMarketingWallet(marketing, { from: from });
+
+      expect(await this.token.balanceOf(marketing)).to.be.bignumber.equal(
+        ether("0")
+      );
+
+      const supply = await this.allocations.MARKETING_SUPPLY();
+      const period = await this.allocations.MARKETING_VESTING_PERIOD();
+
+      expect(period).to.be.bignumber.equal(new BN(0));
+
+      await time.increaseTo(this.startTime.add(time.duration.days("30")));
+
+      await this.allocations.grantToMarketingWallet({ from: from });
+
+      //try unlock 1 month
+      expect(await this.token.balanceOf(marketing)).to.be.bignumber.equal(
+        supply
+      );
+
+      await time.increaseTo(this.startTime.add(time.duration.days("40")));
+
+      //try unlock after some days
+      expect(await this.token.balanceOf(marketing)).to.be.bignumber.equal(
+        supply
+      );
+
+      expect(
+        await this.allocations.marketingReleaseAmount()
+      ).to.be.bignumber.equal(supply);
+
+      expect(await this.token.balanceOf(marketing)).to.be.bignumber.equal(
+        supply
+      );
+
+      //try unlock after 2 month
+      await time.increaseTo(this.startTime.add(time.duration.days("60")));
+
+      await this.allocations.grantToMarketingWallet({ from: from });
+
+      expect(
+        await this.allocations.marketingReleaseAmount()
+      ).to.be.bignumber.equal(supply);
+
+      expect(await this.token.balanceOf(marketing)).to.be.bignumber.equal(
+        supply
+      );
+
+      //try unlock after 17 month - all supply
+      await time.increaseTo(this.startTime.add(time.duration.days("510")));
+
+      await this.allocations.grantToMarketingWallet({ from: from });
+
+      expect(
+        await this.allocations.marketingReleaseAmount()
+      ).to.be.bignumber.equal(supply);
+
+      expect(await this.token.balanceOf(marketing)).to.be.bignumber.equal(
+        supply
+      );
+
+      expect(await this.token.balanceOf(marketing)).to.be.bignumber.equal(
+        supply
+      );
+
+      expect(await this.token.balanceOf(marketing)).to.be.bignumber.equal(
+        supply
+      );
+
+      //try unlock after 20 month - all supply, no changes
+      await time.increaseTo(this.startTime.add(time.duration.days("600")));
+
+      await this.allocations.grantToMarketingWallet({ from: from });
+
+      expect(
+        await this.allocations.marketingReleaseAmount()
+      ).to.be.bignumber.equal(supply);
+
+      expect(await this.token.balanceOf(marketing)).to.be.bignumber.equal(
+        supply
+      );
+    });
+
+    it("should has a all supply after ends of marketing vesting period", async function () {
+      await this.allocations.updateMarketingWallet(marketing, { from: from });
+      expect(await this.token.balanceOf(marketing)).to.be.bignumber.equal(
+        ether("0")
+      );
+
+      const supply = await this.allocations.MARKETING_SUPPLY();
+
+      await time.increaseTo(this.startTime.add(time.duration.days("720")));
+
+      await this.allocations.grantToMarketingWallet({ from: from });
+
+      expect(await this.token.balanceOf(marketing)).to.be.bignumber.equal(
+        supply
+      );
+    });
+
+    it("should has a 17 months presale vesting period without cliff  with initial unlock", async function () {
+      await this.allocations.updatePresaleWallet(presale, { from: from });
+
+      expect(await this.token.balanceOf(presale)).to.be.bignumber.equal(
+        ether("0")
+      );
+
+      const supply = await this.allocations.PRESALE_SUPPLY();
+      const period = await this.allocations.PRESALE_VESTING_PERIOD();
+
+      expect(period).to.be.bignumber.equal(new BN(17));
+
+      const initialUnlock = supply
+        .mul(await this.allocations.PRESALE_INITIAL_UNLOCK())
+        .div(ether("1"));
+
+      const unlock = supply.sub(initialUnlock).div(period);
+
+      await time.increaseTo(this.startTime.add(time.duration.days("30")));
+
+      await this.allocations.grantToPresaleWallet({ from: from });
+
+      //try unlock 1 month
+      expect(await this.token.balanceOf(presale)).to.be.bignumber.equal(
+        initialUnlock.add(unlock)
+      );
+
+      await time.increaseTo(this.startTime.add(time.duration.days("40")));
+
+      //try unlock after some days
+      expect(await this.token.balanceOf(presale)).to.be.bignumber.equal(
+        initialUnlock.add(unlock)
+      );
+
+      //try unlock after 2 month
+      await time.increaseTo(this.startTime.add(time.duration.days("60")));
+
+      await this.allocations.grantToPresaleWallet({ from: from });
+
+      expect(await this.token.balanceOf(presale)).to.be.bignumber.equal(
+        initialUnlock.add(unlock.mul(new BN(2)))
+      );
+
+      //try unlock after 17 month - all supply
+      await time.increaseTo(this.startTime.add(time.duration.days("510")));
+
+      await this.allocations.grantToPresaleWallet({ from: from });
+
+      expect(await this.token.balanceOf(presale)).to.be.bignumber.equal(
+        initialUnlock.add(unlock.mul(new BN(17)))
+      );
+
+      //try unlock after 20 month - all supply, no changes
+      await time.increaseTo(this.startTime.add(time.duration.days("600")));
+
+      await this.allocations.grantToPresaleWallet({ from: from });
+
+      expect(await this.token.balanceOf(presale))
+        .to.be.bignumber.at.most(supply)
+        .least(supply.sub(ether("0.00000000000001")));
+    });
+
+    it("should has a all supply after ends of presale vesting period", async function () {
+      await this.allocations.updatePresaleWallet(presale, { from: from });
+      expect(await this.token.balanceOf(presale)).to.be.bignumber.equal(
+        ether("0")
+      );
+
+      const supply = await this.allocations.PRESALE_SUPPLY();
+
+      await time.increaseTo(this.startTime.add(time.duration.days("720")));
+
+      await this.allocations.grantToPresaleWallet({ from: from });
+
+      expect(await this.token.balanceOf(presale)).to.be.bignumber.equal(supply);
+    });
+
+    it("should has a 12 months reserve vesting period with 12 month cliff  without initial unlock", async function () {
+      await this.allocations.updateReserveWallet(reserve, { from: from });
+
+      expect(await this.token.balanceOf(reserve)).to.be.bignumber.equal(
+        ether("0")
+      );
+
+      const supply = await this.allocations.RESERVE_SUPPLY();
+      const period = await this.allocations.RESERVE_VESTING_PERIOD();
+
+      expect(period).to.be.bignumber.equal(new BN(12));
+
+      const unlock = supply.div(period);
+
+      const initialUnlock = supply
+        .mul(await this.allocations.RESERVE_INITIAL_UNLOCK())
+        .div(ether("1"));
+
+      await time.increaseTo(this.startTime.add(time.duration.days("30")));
+
+      await this.allocations.grantToReserveWallet({ from: from });
+      //try unlock 1 month
+      expect(await this.token.balanceOf(reserve)).to.be.bignumber.equal(
+        ether("0")
+      );
+
+      //try unlock 6 month
+      await time.increaseTo(this.startTime.add(time.duration.days("180")));
+
+      await this.allocations.grantToReserveWallet({ from: from });
+
+      expect(await this.token.balanceOf(reserve)).to.be.bignumber.equal(
+        ether("0")
+      );
+
+      //try unlock 12 month
+      await time.increaseTo(this.startTime.add(time.duration.days("365")));
+
+      await this.allocations.grantToReserveWallet({ from: from });
+
+      expect(await this.allocations.reserveTimelock()).to.be.bignumber.equal(
+        this.startTime.add(time.duration.days("365"))
+      );
+
+      expect(await this.allocations.reserveCounter()).to.be.bignumber.equal(
+        ether("0")
+      );
+
+      //try unlock after 1 month from cliff
+      await time.increaseTo(this.startTime.add(time.duration.days("395")));
+
+      await this.allocations.grantToReserveWallet({ from: from });
+
+      expect(await this.token.balanceOf(reserve)).to.be.bignumber.equal(
+        initialUnlock.add(unlock.mul(new BN(1)))
+      );
+
+      //try unlock after 12 month - all supply
+      await time.increaseTo(this.startTime.add(time.duration.days("730")));
+
+      await this.allocations.grantToReserveWallet({ from: from });
+
+      expect(await this.token.balanceOf(reserve))
+        .to.be.bignumber.at.most(supply)
+        .least(supply.sub(ether("0.00000000000001")));
+
+      //try unlock after 20 month - all supply, no changes
+      await time.increaseTo(this.startTime.add(time.duration.days("800")));
+
+      await this.allocations.grantToReserveWallet({ from: from });
+
+      expect(await this.token.balanceOf(reserve))
+        .to.be.bignumber.at.most(supply)
+        .least(supply.sub(ether("0.00000000000001")));
+    });
+
+    it("should has a all supply after ends of reserve vesting period", async function () {
+      await this.allocations.updateReserveWallet(reserve, { from: from });
+      expect(await this.token.balanceOf(reserve)).to.be.bignumber.equal(
+        ether("0")
+      );
+
+      const supply = await this.allocations.RESERVE_SUPPLY();
+
+      await time.increaseTo(this.startTime.add(time.duration.days("1000")));
+
+      await this.allocations.grantToReserveWallet({ from: from });
+
+      expect(await this.token.balanceOf(reserve))
+        .to.be.bignumber.at.most(supply)
+        .least(supply.sub(ether("0.00000000000001")));
+    });
+
+    it("should has a 3 months vesting technology period without cliff  with initial unlock", async function () {
+      await this.allocations.updateTechnologyWallet(technology, { from: from });
+
+      expect(await this.token.balanceOf(technology)).to.be.bignumber.equal(
+        ether("0")
+      );
+
+      const supply = await this.allocations.TECHNOLOGY_SUPPLY();
+      const period = await this.allocations.TECHNOLOGY_VESTING_PERIOD();
+
+      expect(period).to.be.bignumber.equal(new BN(3));
+
+      const initialUnlock = supply
+        .mul(await this.allocations.TECHNOLOGY_INITIAL_UNLOCK())
+        .div(ether("1"));
+
+      const unlock = supply.sub(initialUnlock).div(period);
+
+      //try unlock initial
+
+      await time.increaseTo(this.startTime.add(time.duration.days("20")));
+
+      await this.allocations.grantToTechnologyWallet({ from: from });
+
+      expect(await this.token.balanceOf(technology)).to.be.bignumber.equal(
+        initialUnlock
+      );
+
+      //try unlock after 1 month
+
+      await time.increaseTo(this.startTime.add(time.duration.days("40")));
+
+      await this.allocations.grantToTechnologyWallet({ from: from });
+
+      expect(await this.token.balanceOf(technology)).to.be.bignumber.equal(
+        initialUnlock.add(unlock)
+      );
+
+      //try unlock after 2 month
+      await time.increaseTo(this.startTime.add(time.duration.days("60")));
+
+      await this.allocations.grantToTechnologyWallet({ from: from });
+
+      expect(await this.token.balanceOf(technology)).to.be.bignumber.equal(
+        initialUnlock.add(unlock.mul(new BN(2)))
+      );
+
+      //try unlock after 3 month
+      await time.increaseTo(this.startTime.add(time.duration.days("90")));
+
+      await this.allocations.grantToTechnologyWallet({ from: from });
+
+      expect(await this.token.balanceOf(technology))
+        .to.be.bignumber.at.most(supply)
+        .least(supply.sub(ether("0.00000000000001")));
+
+      //try unlock after 20 month - all supply, no changes
+      await time.increaseTo(this.startTime.add(time.duration.days("120")));
+
+      await this.allocations.grantToTechnologyWallet({ from: from });
+
+      expect(await this.token.balanceOf(technology))
+        .to.be.bignumber.at.most(supply)
+        .least(supply.sub(ether("0.00000000000001")));
+    });
+
+    it("should has a all supply after ends of reserve technology period", async function () {
+      await this.allocations.updateTechnologyWallet(technology, { from: from });
+      expect(await this.token.balanceOf(technology)).to.be.bignumber.equal(
+        ether("0")
+      );
+
+      const supply = await this.allocations.TECHNOLOGY_SUPPLY();
+
+      await time.increaseTo(this.startTime.add(time.duration.days("720")));
+
+      await this.allocations.grantToTechnologyWallet({ from: from });
+
+      expect(await this.token.balanceOf(technology)).to.be.bignumber.equal(
+        supply
+      );
+    });
+
+    it("should has a 3 months vesting legal period without cliff  with initial unlock", async function () {
+      await this.allocations.updateLegalWallet(legal, { from: from });
+
+      expect(await this.token.balanceOf(legal)).to.be.bignumber.equal(
+        ether("0")
+      );
+
+      const supply = await this.allocations.LEGAL_SUPPLY();
+      const period = await this.allocations.LEGAL_VESTING_PERIOD();
+
+      expect(period).to.be.bignumber.equal(new BN(3));
+
+      const initialUnlock = supply
+        .mul(await this.allocations.LEGAL_INITIAL_UNLOCK())
+        .div(ether("1"));
+
+      const unlock = supply.sub(initialUnlock).div(period);
+
+      //try unlock initial
+
+      await time.increaseTo(this.startTime.add(time.duration.days("20")));
+
+      await this.allocations.grantToLegalWallet({ from: from });
+
+      expect(await this.token.balanceOf(legal)).to.be.bignumber.equal(
+        initialUnlock
+      );
+
+      //try unlock after 1 month
+
+      await time.increaseTo(this.startTime.add(time.duration.days("40")));
+
+      await this.allocations.grantToLegalWallet({ from: from });
+
+      expect(await this.token.balanceOf(legal)).to.be.bignumber.equal(
+        initialUnlock.add(unlock)
+      );
+
+      //try unlock after 2 month
+      await time.increaseTo(this.startTime.add(time.duration.days("60")));
+
+      await this.allocations.grantToLegalWallet({ from: from });
+
+      expect(await this.token.balanceOf(legal)).to.be.bignumber.equal(
+        initialUnlock.add(unlock.mul(new BN(2)))
+      );
+
+      //try unlock after 3 month
+      await time.increaseTo(this.startTime.add(time.duration.days("90")));
+
+      await this.allocations.grantToLegalWallet({ from: from });
+
+      expect(await this.token.balanceOf(legal))
+        .to.be.bignumber.at.most(supply)
+        .least(supply.sub(ether("0.00000000000001")));
+
+      //try unlock after 20 month - all supply, no changes
+      await time.increaseTo(this.startTime.add(time.duration.days("120")));
+
+      await this.allocations.grantToLegalWallet({ from: from });
+
+      expect(await this.token.balanceOf(legal))
+        .to.be.bignumber.at.most(supply)
+        .least(supply.sub(ether("0.00000000000001")));
+    });
+
+    it("should has a all supply after ends of legal vesting period", async function () {
+      await this.allocations.updateLegalWallet(legal, { from: from });
+      expect(await this.token.balanceOf(legal)).to.be.bignumber.equal(
+        ether("0")
+      );
+
+      const supply = await this.allocations.LEGAL_SUPPLY();
+
+      await time.increaseTo(this.startTime.add(time.duration.days("720")));
+
+      await this.allocations.grantToLegalWallet({ from: from });
+
+      expect(await this.token.balanceOf(legal)).to.be.bignumber.equal(supply);
+    });
+
+    it("should has a 3 months vesting advisor period without cliff  with initial unlock", async function () {
+      await this.allocations.updateAdvisorWallet(advisor, { from: from });
+
+      expect(await this.token.balanceOf(advisor)).to.be.bignumber.equal(
+        ether("0")
+      );
+
+      const supply = await this.allocations.ADVISOR_SUPPLY();
+      const period = await this.allocations.ADVISOR_VESTING_PERIOD();
+
+      expect(period).to.be.bignumber.equal(new BN(3));
+
+      const initialUnlock = supply
+        .mul(await this.allocations.ADVISOR_INITIAL_UNLOCK())
+        .div(ether("1"));
+
+      const unlock = supply.sub(initialUnlock).div(period);
+
+      //try unlock initial
+
+      await time.increaseTo(this.startTime.add(time.duration.days("20")));
+
+      await this.allocations.grantToAdvisorWallet({ from: from });
+
+      expect(await this.token.balanceOf(advisor)).to.be.bignumber.equal(
+        initialUnlock
+      );
+
+      //try unlock after 1 month
+
+      await time.increaseTo(this.startTime.add(time.duration.days("40")));
+
+      await this.allocations.grantToAdvisorWallet({ from: from });
+
+      expect(await this.token.balanceOf(advisor)).to.be.bignumber.equal(
+        initialUnlock.add(unlock)
+      );
+
+      //try unlock after 2 month
+      await time.increaseTo(this.startTime.add(time.duration.days("60")));
+
+      await this.allocations.grantToAdvisorWallet({ from: from });
+
+      expect(await this.token.balanceOf(advisor)).to.be.bignumber.equal(
+        initialUnlock.add(unlock.mul(new BN(2)))
+      );
+
+      //try unlock after 3 month
+      await time.increaseTo(this.startTime.add(time.duration.days("90")));
+
+      await this.allocations.grantToAdvisorWallet({ from: from });
+
+      expect(await this.token.balanceOf(advisor))
+        .to.be.bignumber.at.most(supply)
+        .least(supply.sub(ether("0.00000000000001")));
+
+      //try unlock after 20 month - all supply, no changes
+      await time.increaseTo(this.startTime.add(time.duration.days("120")));
+
+      await this.allocations.grantToAdvisorWallet({ from: from });
+
+      expect(await this.token.balanceOf(advisor))
+        .to.be.bignumber.at.most(supply)
+        .least(supply.sub(ether("0.00000000000001")));
+    });
+
+    it("should has a all supply after ends of advisor legal period", async function () {
+      await this.allocations.updateAdvisorWallet(advisor, { from: from });
+      expect(await this.token.balanceOf(advisor)).to.be.bignumber.equal(
+        ether("0")
+      );
+
+      const supply = await this.allocations.ADVISOR_SUPPLY();
+
+      await time.increaseTo(this.startTime.add(time.duration.days("720")));
+
+      await this.allocations.grantToAdvisorWallet({ from: from });
+
+      expect(await this.token.balanceOf(advisor)).to.be.bignumber.equal(supply);
+    });
+
+    it("should has a 0 months ido vesting period without cliff  with initial unlock", async function () {
+      await this.allocations.updateIdoWallet(ido, { from: from });
+
+      expect(await this.token.balanceOf(ido)).to.be.bignumber.equal(ether("0"));
+
+      const supply = await this.allocations.IDO_SUPPLY();
+      const period = await this.allocations.IDO_VESTING_PERIOD();
+
+      expect(period).to.be.bignumber.equal(new BN(0));
+
+      await time.increaseTo(this.startTime.add(time.duration.days("30")));
+
+      await this.allocations.grantToIdoWallet({ from: from });
+
+      //try unlock 1 month
+      expect(await this.token.balanceOf(ido)).to.be.bignumber.equal(supply);
+
+      await time.increaseTo(this.startTime.add(time.duration.days("40")));
+
+      //try unlock after some days
+      expect(await this.token.balanceOf(ido)).to.be.bignumber.equal(supply);
+
+      expect(await this.allocations.idoReleaseAmount()).to.be.bignumber.equal(
+        supply
+      );
+
+      expect(await this.token.balanceOf(ido)).to.be.bignumber.equal(supply);
+
+      //try unlock after 2 month
+      await time.increaseTo(this.startTime.add(time.duration.days("60")));
+
+      await this.allocations.grantToIdoWallet({ from: from });
+
+      expect(await this.allocations.idoReleaseAmount()).to.be.bignumber.equal(
+        supply
+      );
+
+      expect(await this.token.balanceOf(ido)).to.be.bignumber.equal(supply);
+
+      //try unlock after 17 month - all supply
+      await time.increaseTo(this.startTime.add(time.duration.days("510")));
+
+      await this.allocations.grantToIdoWallet({ from: from });
+
+      expect(await this.allocations.idoReleaseAmount()).to.be.bignumber.equal(
+        supply
+      );
+
+      expect(await this.token.balanceOf(ido)).to.be.bignumber.equal(supply);
+
+      expect(await this.token.balanceOf(ido)).to.be.bignumber.equal(supply);
+
+      expect(await this.token.balanceOf(ido)).to.be.bignumber.equal(supply);
+
+      //try unlock after 20 month - all supply, no changes
+      await time.increaseTo(this.startTime.add(time.duration.days("600")));
+
+      await this.allocations.grantToIdoWallet({ from: from });
+
+      expect(await this.allocations.idoReleaseAmount()).to.be.bignumber.equal(
+        supply
+      );
+
+      expect(await this.token.balanceOf(ido)).to.be.bignumber.equal(supply);
+    });
+
+    it("should has a all supply after ends of advisor ido period", async function () {
+      await this.allocations.updateIdoWallet(ido, { from: from });
+      expect(await this.token.balanceOf(ido)).to.be.bignumber.equal(ether("0"));
+
+      const supply = await this.allocations.IDO_SUPPLY();
+
+      await time.increaseTo(this.startTime.add(time.duration.days("720")));
+
+      await this.allocations.grantToIdoWallet({ from: from });
+
+      expect(await this.token.balanceOf(ido)).to.be.bignumber.equal(supply);
+    });
+  });
 });
