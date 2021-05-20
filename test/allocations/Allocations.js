@@ -198,7 +198,7 @@ contract("Allocations", function (accounts) {
     */
 
     it("only owner can update liquidity wallet", async function () {
-        await expectRevert(
+      await expectRevert(
         this.allocations.updateLiquidityWallet(liquidity, {
           from: wallet,
         }),
@@ -207,75 +207,183 @@ contract("Allocations", function (accounts) {
     });
 
     it("only owner can update team wallet", async function () {
-        await expectRevert(
-            this.allocations.updateTeamWallet(team, {
-              from: wallet,
-            }),
-            "Ownable: caller is not the owner"
-          );
+      await expectRevert(
+        this.allocations.updateTeamWallet(team, {
+          from: wallet,
+        }),
+        "Ownable: caller is not the owner"
+      );
     });
 
     it("only owner can update marketing wallet", async function () {
-        await expectRevert(
-            this.allocations.updateMarketingWallet(marketing, {
-              from: wallet,
-            }),
-            "Ownable: caller is not the owner"
-          );
+      await expectRevert(
+        this.allocations.updateMarketingWallet(marketing, {
+          from: wallet,
+        }),
+        "Ownable: caller is not the owner"
+      );
     });
 
     it("only owner can update presale wallet", async function () {
-        await expectRevert(
-            this.allocations.updatePresaleWallet(presale, {
-              from: wallet,
-            }),
-            "Ownable: caller is not the owner"
-          );
+      await expectRevert(
+        this.allocations.updatePresaleWallet(presale, {
+          from: wallet,
+        }),
+        "Ownable: caller is not the owner"
+      );
     });
 
     it("only owner can update reserve wallet", async function () {
-        await expectRevert(
-            this.allocations.updateReserveWallet(reserve, {
-              from: wallet,
-            }),
-            "Ownable: caller is not the owner"
-          );
+      await expectRevert(
+        this.allocations.updateReserveWallet(reserve, {
+          from: wallet,
+        }),
+        "Ownable: caller is not the owner"
+      );
     });
 
     it("only owner can update technology wallet", async function () {
-        await expectRevert(
-            this.allocations.updateTechnologyWallet(technology, {
-              from: wallet,
-            }),
-            "Ownable: caller is not the owner"
-          );
+      await expectRevert(
+        this.allocations.updateTechnologyWallet(technology, {
+          from: wallet,
+        }),
+        "Ownable: caller is not the owner"
+      );
     });
 
     it("only owner can update legal wallet", async function () {
-        await expectRevert(
-            this.allocations.updateLegalWallet(legal, {
-              from: wallet,
-            }),
-            "Ownable: caller is not the owner"
-          );
+      await expectRevert(
+        this.allocations.updateLegalWallet(legal, {
+          from: wallet,
+        }),
+        "Ownable: caller is not the owner"
+      );
     });
 
     it("only owner can update advisor wallet", async function () {
-        await expectRevert(
-            this.allocations.updateAdvisorWallet(advisor, {
-              from: wallet,
-            }),
-            "Ownable: caller is not the owner"
-          );
+      await expectRevert(
+        this.allocations.updateAdvisorWallet(advisor, {
+          from: wallet,
+        }),
+        "Ownable: caller is not the owner"
+      );
     });
 
     it("only owner can update ido wallet", async function () {
-        await expectRevert(
-            this.allocations.updateIdoWallet(ido, {
-              from: wallet,
-            }),
-            "Ownable: caller is not the owner"
-          );
+      await expectRevert(
+        this.allocations.updateIdoWallet(ido, {
+          from: wallet,
+        }),
+        "Ownable: caller is not the owner"
+      );
+    });
+  });
+
+  describe("Change Wallet Process", function () {
+    const [
+      owner,
+      wallet,
+      liquidity,
+      team,
+      marketing,
+      presale,
+      reserve,
+      technology,
+      legal,
+      advisor,
+      ido,
+    ] = accounts;
+
+    const from = owner;
+    const name = "Winners Network Rewards Token";
+    const symbol = "WINS";
+    const initialSupply = ether("180000000");
+
+    const allocationsSupply = ether("160775000");
+
+    beforeEach(async function () {
+      this.token = await WinsToken.new(name, symbol, initialSupply, {
+        from: from,
+      });
+
+      this.startTime = (await time.latest()).add(time.duration.weeks(1));
+
+      this.allocations = await Allocations.new(
+        this.startTime,
+        this.token.address,
+        {
+          from: from,
+        }
+      );
+
+      await this.token.transfer(this.allocations.address, allocationsSupply, {
+        from: from,
+      });
+    });
+
+    it("should has 30 days liquidity cliff", async function () {
+      const cliff = await this.allocations.LIQUIDITY_CLIFF_PERIOD();
+      expect(await this.allocations.liquidityTimelock()).to.be.bignumber.equal(
+        this.startTime.add(cliff)
+      );
+    });
+
+    it("should has 30 days liquidity cliff", async function () {
+      const cliff = await this.allocations.LIQUIDITY_CLIFF_PERIOD();
+      expect(cliff).to.be.bignumber.equal(time.duration.days(30));
+      expect(await this.allocations.liquidityTimelock()).to.be.bignumber.equal(
+        this.startTime.add(cliff)
+      );
+    });
+
+    it("should has 0 days team cliff", async function () {
+      expect(await this.allocations.teamTimelock()).to.be.bignumber.equal(
+        this.startTime
+      );
+    });
+
+    it("should has 0 days marketing cliff", async function () {
+      expect(await this.allocations.marketingTimelock()).to.be.bignumber.equal(
+        this.startTime
+      );
+    });
+
+    it("should has 0 days presale cliff", async function () {
+      expect(await this.allocations.presaleTimelock()).to.be.bignumber.equal(
+        this.startTime
+      );
+    });
+
+    it("should has 365 days reserve cliff", async function () {
+      const cliff = await this.allocations.RESERVE_CLIFF_PERIOD();
+      expect(cliff).to.be.bignumber.equal(time.duration.days(365));
+      expect(await this.allocations.reserveTimelock()).to.be.bignumber.equal(
+        this.startTime.add(cliff)
+      );
+    });
+
+    it("should has 0 days technology cliff", async function () {
+      expect(await this.allocations.technologyTimelock()).to.be.bignumber.equal(
+        this.startTime
+      );
+    });
+
+    it("should has 0 days legal cliff", async function () {
+      expect(await this.allocations.legalTimelock()).to.be.bignumber.equal(
+        this.startTime
+      );
+    });
+
+    it("should has 0 days advisor cliff", async function () {
+      expect(await this.allocations.advisorTimelock()).to.be.bignumber.equal(
+        this.startTime
+      );
+    });
+
+    it("should has 0 days ido cliff", async function () {
+      expect(await this.allocations.idoTimelock()).to.be.bignumber.equal(
+        this.startTime
+      );
     });
   });
 });
