@@ -113,7 +113,7 @@ contract Allocations is Ownable, Pausable, ReentrancyGuard {
         liquidity = _wallet;
     }
 
-    function updatTeamWallet(address _wallet) external onlyOwner {
+    function updateTeamWallet(address _wallet) external onlyOwner {
         require(_wallet != address(0), "invalid wallet address");
         team = _wallet;
     }
@@ -187,7 +187,7 @@ contract Allocations is Ownable, Pausable, ReentrancyGuard {
         );
     }
 
-    function updatTeamWallet() external {
+    function grantToTeamWallet() external {
         teamCounter = _grantTokens(team, TEAM_SUPPLY, teamTimelock, TEAM_INITIAL_UNLOCK, teamVestingPeriod, teamCounter);
     }
 
