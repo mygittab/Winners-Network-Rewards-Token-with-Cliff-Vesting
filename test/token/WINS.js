@@ -8,7 +8,7 @@ const {
 const { expect } = require("chai");
 const { ZERO_ADDRESS } = constants;
 
-const ZilliosToken = artifacts.require("WINS");
+const WinsToken = artifacts.require("WINS");
 
 const {
   shouldBehaveLikeERC20,
@@ -25,7 +25,7 @@ contract("ERC20", function (accounts) {
   const initialSupply = ether("160775000");
 
   beforeEach(async function () {
-    this.token = await ZilliosToken.new(name, symbol, initialSupply, {
+    this.token = await WinsToken.new(name, symbol, initialSupply, {
       from: initialHolder,
     });
   });

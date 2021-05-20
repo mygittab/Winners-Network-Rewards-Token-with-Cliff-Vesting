@@ -125,7 +125,7 @@ contract Allocations is Ownable, Pausable, ReentrancyGuard {
 
     function updatePresaleWallet(address _wallet) external onlyOwner {
         require(_wallet != address(0), "invalid wallet address");
-        liquidity = _wallet;
+        presale = _wallet;
     }
 
     function updateReserveWallet(address _wallet) external onlyOwner {
@@ -135,7 +135,7 @@ contract Allocations is Ownable, Pausable, ReentrancyGuard {
 
     function updateTechnologyWallet(address _wallet) external onlyOwner {
         require(_wallet != address(0), "invalid wallet address");
-        liquidity = _wallet;
+        technology = _wallet;
     }
 
     function updateLegalWallet(address _wallet) external onlyOwner {
