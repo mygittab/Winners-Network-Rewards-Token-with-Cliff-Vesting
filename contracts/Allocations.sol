@@ -12,15 +12,15 @@ contract Allocations is Ownable, Pausable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     // SUPPLIES :: START
-    uint256 public constant LIQUIDITY_SUPPLY = 6633576500 * (1 ether); //6633576500,00, 41,26%
-    uint256 public constant TEAM_SUPPLY = 3014531250 * (1 ether); //3014531250,00, 18,75%
-    uint256 public constant MARKETING_SUPPLY = 1848912500 * (1 ether); //1848912500,00, 11,50%,
-    uint256 public constant PRESALE_SUPPLY = 1717077000 * (1 ether); //1717077000,00, 10,68%
-    uint256 public constant RESERVE_SUPPLY = 1004843750 * (1 ether); //1004843750,00, 6,25%
-    uint256 public constant TECHNOLOGY_SUPPLY = 803875000 * (1 ether); //803875000,00, 5%
-    uint256 public constant LEGAL_SUPPLY = 562712500 * (1 ether); //562712500,00, 3,50%
-    uint256 public constant ADVISOR_SUPPLY = 401937500 * (1 ether); //401937500,00, 2,5%
-    uint256 public constant IDO_SUPPLY = 90034000 * (1 ether); //90034000,00, 0,56%
+    uint256 public constant LIQUIDITY_SUPPLY = 6633576500 * 1e16; //66335765,00, 41,26%
+    uint256 public constant TEAM_SUPPLY = 3014531250 * 1e16; //30145312,5, 18,75%
+    uint256 public constant MARKETING_SUPPLY = 1848912500 * 1e16; //18489125, 11,50%,
+    uint256 public constant PRESALE_SUPPLY = 1717077000 * 1e16; //17170770, 10,68%
+    uint256 public constant RESERVE_SUPPLY = 1004843750 * 1e16; //10048437,50, 6,25%
+    uint256 public constant TECHNOLOGY_SUPPLY = 803875000 * 1e16; //8038750, 5%
+    uint256 public constant LEGAL_SUPPLY = 562712500 * 1e16; //5627125, 3,50%
+    uint256 public constant ADVISOR_SUPPLY = 401937500 * 1e16; //4019375, 2,5%
+    uint256 public constant IDO_SUPPLY = 90034000 * 1e16; //900340 0,56%
 
     // SUPPLIES :: CLIFF
     uint256 public constant LIQUIDITY_CLIFF_PERIOD = 30 days; //1 month
@@ -180,15 +180,15 @@ contract Allocations is Ownable, Pausable, ReentrancyGuard {
         liquidityCounter = _grantTokens(
             liquidity,
             LIQUIDITY_SUPPLY,
-            liquidityTimelock,
             LIQUIDITY_INITIAL_UNLOCK,
+            liquidityTimelock,
             liquidityVestingPeriod,
             liquidityCounter
         );
     }
 
     function grantToTeamWallet() external {
-        teamCounter = _grantTokens(team, TEAM_SUPPLY, teamTimelock, TEAM_INITIAL_UNLOCK, teamVestingPeriod, teamCounter);
+        teamCounter = _grantTokens(team, TEAM_SUPPLY, TEAM_INITIAL_UNLOCK, teamTimelock, teamVestingPeriod, teamCounter);
     }
 
     function grantToMarketingWallet() external {
@@ -236,7 +236,7 @@ contract Allocations is Ownable, Pausable, ReentrancyGuard {
     }
 
     function grantToLegalWallet() external {
-        legalCounter = _grantTokens(legal, LEGAL_SUPPLY, legalTimelock, LEGAL_INITIAL_UNLOCK, legalVestingPeriod, legalCounter);
+        legalCounter = _grantTokens(legal, LEGAL_SUPPLY, LEGAL_INITIAL_UNLOCK, legalTimelock, legalVestingPeriod, legalCounter);
     }
 
     function grantToAdvisorWallet() external {
@@ -251,7 +251,7 @@ contract Allocations is Ownable, Pausable, ReentrancyGuard {
     }
 
     function grantToIdoWallet() external {
-        idoCounter = _grantTokens(ido, IDO_SUPPLY, idoTimelock, IDO_INITIAL_UNLOCK, idoVestingPeriod, idoCounter);
+        idoCounter = _grantTokens(ido, IDO_SUPPLY, IDO_INITIAL_UNLOCK,  idoTimelock, idoVestingPeriod, idoCounter);
     }
 
     /**
@@ -260,8 +260,8 @@ contract Allocations is Ownable, Pausable, ReentrancyGuard {
     function _grantTokens(
         address _wallet,
         uint256 _supply,
-        uint256 _timelock,
         uint256 _initialUnlock,
+        uint256 _timelock,
         uint256 _period,
         uint256 _counter
     ) internal nonReentrant returns (uint256 _newCounter) {
