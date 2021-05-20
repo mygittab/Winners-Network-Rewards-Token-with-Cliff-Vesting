@@ -555,7 +555,7 @@ contract("Allocations", function (accounts) {
         ether("0")
       );
 
-      await this.allocations.grantToLiquidityWallet({from: from});
+      await this.allocations.grantToLiquidityWallet({ from: from });
 
       expect(await this.token.balanceOf(liquidity)).to.be.bignumber.equal(
         ether("0")
@@ -563,180 +563,145 @@ contract("Allocations", function (accounts) {
     });
 
     it("should has 15% team initial allocation", async function () {
-        await this.allocations.updateTeamWallet(team, { from: from });
-  
-        expect(await this.token.balanceOf(team)).to.be.bignumber.equal(
-          ether("0")
-        );
-  
-        await this.allocations.grantToTeamWallet({from: from});
-        const supply = await this.allocations.TEAM_SUPPLY();
-        const initialSupply = await this.allocations.TEAM_INITIAL_UNLOCK(); //percent
+      await this.allocations.updateTeamWallet(team, { from: from });
 
-        expect(initialSupply).to.be.bignumber.equal(ether("0.15"));
+      expect(await this.token.balanceOf(team)).to.be.bignumber.equal(
+        ether("0")
+      );
 
-        const percent = supply.mul(initialSupply).div(ether("1"));
-        
-        
-        expect(await this.token.balanceOf(team)).to.be.bignumber.equal(
-          percent
-        );
+      await this.allocations.grantToTeamWallet({ from: from });
+      const supply = await this.allocations.TEAM_SUPPLY();
+      const initialUnlock = await this.allocations.TEAM_INITIAL_UNLOCK(); //percent
+
+      expect(initialUnlock).to.be.bignumber.equal(ether("0.15")); //15%
+
+      const percent = supply.mul(initialUnlock).div(ether("1"));
+
+      expect(await this.token.balanceOf(team)).to.be.bignumber.equal(percent);
     });
 
     it("should has 100% marketing initial allocation", async function () {
-        await this.allocations.updateMarketingWallet(marketing, { from: from });
-        expect(await this.token.balanceOf(marketing)).to.be.bignumber.equal(
-          ether("0")
-        );
-        await this.allocations.grantToMarketingWallet({from: from});
-        const supply = await this.allocations.MARKETING_SUPPLY();
-        const initialSupply = await this.allocations.MARKETING_INITIAL_UNLOCK(); //percent, 100%
+      await this.allocations.updateMarketingWallet(marketing, { from: from });
+      expect(await this.token.balanceOf(marketing)).to.be.bignumber.equal(
+        ether("0")
+      );
+      await this.allocations.grantToMarketingWallet({ from: from });
+      const supply = await this.allocations.MARKETING_SUPPLY();
+      const initialUnlock = await this.allocations.MARKETING_INITIAL_UNLOCK(); //percent, 100%
 
-        expect(initialSupply).to.be.bignumber.equal(ether("1"));
+      expect(initialUnlock).to.be.bignumber.equal(ether("1"));
 
-        const percent = supply.mul(initialSupply).div(ether("1"));
-        
-        expect(await this.token.balanceOf(marketing)).to.be.bignumber.equal(
-          percent
-        );
-    });
+      const percent = supply.mul(initialUnlock).div(ether("1"));
 
-
-    it("should has 15% team initial allocation", async function () {
-        await this.allocations.updateTeamWallet(team, { from: from });
-  
-        expect(await this.token.balanceOf(team)).to.be.bignumber.equal(
-          ether("0")
-        );
-  
-        await this.allocations.grantToTeamWallet({from: from});
-        const supply = await this.allocations.TEAM_SUPPLY();
-        const initialSupply = await this.allocations.TEAM_INITIAL_UNLOCK(); //percent
-
-        expect(initialSupply).to.be.bignumber.equal(ether("0.15"));
-
-        const percent = supply.mul(initialSupply).div(ether("1"));
-        
-        
-        expect(await this.token.balanceOf(team)).to.be.bignumber.equal(
-          percent
-        );
+      expect(await this.token.balanceOf(marketing)).to.be.bignumber.equal(
+        percent
+      );
     });
 
     it("should has 15% presale initial allocation", async function () {
-        await this.allocations.updatePresaleWallet(presale, { from: from });
-  
-        expect(await this.token.balanceOf(presale)).to.be.bignumber.equal(
-          ether("0")
-        );
-  
-        await this.allocations.grantToPresaleWallet({from: from});
-        const supply = await this.allocations.PRESALE_SUPPLY();
-        const initialSupply = await this.allocations.PRESALE_INITIAL_UNLOCK(); //percent
+      await this.allocations.updatePresaleWallet(presale, { from: from });
 
-        expect(initialSupply).to.be.bignumber.equal(ether("0.15"));
+      expect(await this.token.balanceOf(presale)).to.be.bignumber.equal(
+        ether("0")
+      );
 
-        const percent = supply.mul(initialSupply).div(ether("1"));
-        
-        
-        expect(await this.token.balanceOf(presale)).to.be.bignumber.equal(
-          percent
-        );
+      await this.allocations.grantToPresaleWallet({ from: from });
+      const supply = await this.allocations.PRESALE_SUPPLY();
+      const initialUnlock = await this.allocations.PRESALE_INITIAL_UNLOCK(); //percent
+
+      expect(initialUnlock).to.be.bignumber.equal(ether("0.15")); //15%
+
+      const percent = supply.mul(initialUnlock).div(ether("1"));
+
+      expect(await this.token.balanceOf(presale)).to.be.bignumber.equal(
+        percent
+      );
     });
 
     it("should has 0% reserve initial allocation", async function () {
-        await this.allocations.updateReserveWallet(reserve, { from: from });
+      await this.allocations.updateReserveWallet(reserve, { from: from });
 
-        expect(await this.token.balanceOf(reserve)).to.be.bignumber.equal(
-            ether("0")
-        );
+      expect(await this.token.balanceOf(reserve)).to.be.bignumber.equal(
+        ether("0")
+      );
 
-        await this.allocations.grantToReserveWallet({from: from});
+      await this.allocations.grantToReserveWallet({ from: from });
 
-        expect(await this.token.balanceOf(reserve)).to.be.bignumber.equal(
-            ether("0")
-        );
+      expect(await this.token.balanceOf(reserve)).to.be.bignumber.equal(
+        ether("0")
+      );
     });
 
     it("should has 25% technology initial allocation", async function () {
-        await this.allocations.updateTechnologyWallet(technology, { from: from });
-  
-        expect(await this.token.balanceOf(technology)).to.be.bignumber.equal(
-          ether("0")
-        );
-  
-        await this.allocations.grantToTechnologyWallet({from: from});
-        const supply = await this.allocations.TECHNOLOGY_SUPPLY();
-        const initialSupply = await this.allocations.TECHNOLOGY_INITIAL_UNLOCK(); //percent
+      await this.allocations.updateTechnologyWallet(technology, { from: from });
 
-        expect(initialSupply).to.be.bignumber.equal(ether("0.25"));
+      expect(await this.token.balanceOf(technology)).to.be.bignumber.equal(
+        ether("0")
+      );
 
-        const percent = supply.mul(initialSupply).div(ether("1"));
-        
-        
-        expect(await this.token.balanceOf(technology)).to.be.bignumber.equal(
-          percent
-        );
+      await this.allocations.grantToTechnologyWallet({ from: from });
+      const supply = await this.allocations.TECHNOLOGY_SUPPLY();
+      const initialUnlock = await this.allocations.TECHNOLOGY_INITIAL_UNLOCK(); //percent
+
+      expect(initialUnlock).to.be.bignumber.equal(ether("0.25")); //25%
+
+      const percent = supply.mul(initialUnlock).div(ether("1"));
+
+      expect(await this.token.balanceOf(technology)).to.be.bignumber.equal(
+        percent
+      );
     });
 
     it("should has 25% legal initial allocation", async function () {
-        await this.allocations.updateLegalWallet(legal, { from: from });
-  
-        expect(await this.token.balanceOf(legal)).to.be.bignumber.equal(
-          ether("0")
-        );
-  
-        await this.allocations.grantToLegalWallet({from: from});
-        const supply = await this.allocations.LEGAL_SUPPLY();
-        const initialSupply = await this.allocations.LEGAL_INITIAL_UNLOCK(); //percent
+      await this.allocations.updateLegalWallet(legal, { from: from });
 
-        expect(initialSupply).to.be.bignumber.equal(ether("0.25"));
+      expect(await this.token.balanceOf(legal)).to.be.bignumber.equal(
+        ether("0")
+      );
 
-        const percent = supply.mul(initialSupply).div(ether("1"));
-        
-        
-        expect(await this.token.balanceOf(legal)).to.be.bignumber.equal(
-          percent
-        );
+      await this.allocations.grantToLegalWallet({ from: from });
+      const supply = await this.allocations.LEGAL_SUPPLY();
+      const initialUnlock = await this.allocations.LEGAL_INITIAL_UNLOCK(); //percent
+
+      expect(initialUnlock).to.be.bignumber.equal(ether("0.25")); //25%
+
+      const percent = supply.mul(initialUnlock).div(ether("1"));
+
+      expect(await this.token.balanceOf(legal)).to.be.bignumber.equal(percent);
     });
 
     it("should has 25% advisor initial allocation", async function () {
-        await this.allocations.updateAdvisorWallet(advisor, { from: from });
-  
-        expect(await this.token.balanceOf(advisor)).to.be.bignumber.equal(
-          ether("0")
-        );
-  
-        await this.allocations.grantToAdvisorWallet({from: from});
-        const supply = await this.allocations.ADVISOR_SUPPLY();
-        const initialSupply = await this.allocations.ADVISOR_INITIAL_UNLOCK(); //percent
+      await this.allocations.updateAdvisorWallet(advisor, { from: from });
 
-        expect(initialSupply).to.be.bignumber.equal(ether("0.25"));
+      expect(await this.token.balanceOf(advisor)).to.be.bignumber.equal(
+        ether("0")
+      );
 
-        const percent = supply.mul(initialSupply).div(ether("1"));
-        
-        
-        expect(await this.token.balanceOf(advisor)).to.be.bignumber.equal(
-          percent
-        );
+      await this.allocations.grantToAdvisorWallet({ from: from });
+      const supply = await this.allocations.ADVISOR_SUPPLY();
+      const initialUnlock = await this.allocations.ADVISOR_INITIAL_UNLOCK(); //percent
+
+      expect(initialUnlock).to.be.bignumber.equal(ether("0.25")); //25%
+
+      const percent = supply.mul(initialUnlock).div(ether("1"));
+
+      expect(await this.token.balanceOf(advisor)).to.be.bignumber.equal(
+        percent
+      );
     });
 
     it("should has 100% ido initial allocation", async function () {
-        await this.allocations.updateIdoWallet(ido, { from: from });
-        expect(await this.token.balanceOf(ido)).to.be.bignumber.equal(
-          ether("0")
-        );
-        await this.allocations.grantToIdoWallet({from: from});
-        const supply = await this.allocations.IDO_SUPPLY();
-        const initialSupply = await this.allocations.IDO_INITIAL_UNLOCK(); //percent, 100%
+      await this.allocations.updateIdoWallet(ido, { from: from });
+      expect(await this.token.balanceOf(ido)).to.be.bignumber.equal(ether("0"));
+      await this.allocations.grantToIdoWallet({ from: from });
+      const supply = await this.allocations.IDO_SUPPLY();
+      const initialUnlock = await this.allocations.IDO_INITIAL_UNLOCK(); //percent, 100%
 
-        expect(initialSupply).to.be.bignumber.equal(ether("1"));
+      expect(initialUnlock).to.be.bignumber.equal(ether("1")); //100%
 
-        const percent = supply.mul(initialSupply).div(ether("1"));
-        
-        expect(await this.token.balanceOf(ido)).to.be.bignumber.equal(
-          percent
-        );
+      const percent = supply.mul(initialUnlock).div(ether("1"));
+
+      expect(await this.token.balanceOf(ido)).to.be.bignumber.equal(percent);
     });
   });
 });
