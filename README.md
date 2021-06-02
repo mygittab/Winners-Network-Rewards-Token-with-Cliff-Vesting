@@ -1,3 +1,4 @@
+
 # Winners Network Rewards Token Without Cliff & Vesting
 This is BEP 20 Smartcontract.
 
@@ -68,7 +69,13 @@ grantTo<name>Wallet() claim tokens to wallet owner with vesting parameters from 
 
 
 # Test output
+![wins_win)_1](https://user-images.githubusercontent.com/56725843/120488928-dedb0e80-c3bf-11eb-94d3-f5099b2390cb.jpg)
 
+![wins_win_2](https://user-images.githubusercontent.com/56725843/120488976-ed292a80-c3bf-11eb-8b1c-080558d61541.jpg)
+
+![wins_win_3](https://user-images.githubusercontent.com/56725843/120488995-f0241b00-c3bf-11eb-9547-a892f565dbed.jpg)
+
+![wins_win_4](https://user-images.githubusercontent.com/56725843/120489018-f4e8cf00-c3bf-11eb-8296-7f20e47ca420.jpg)
 
 # Mainnet Contract
 
